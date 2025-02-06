@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<launch>
+  <!-- <arg name="robot_description" default="robot_description"/>   -->
+  <rosparam file="$(find ymbot_b_moveit_config)/config/ros_controllers.yaml" command="load"/>
+  <rosparam command="load" file="$(find ymbot_b_moveit_config)/config/kinematics.yaml" />
+
+  <param name="robot_description" textfile="$(find ymbot_b_description)/urdf/ymbot_b_description.urdf" />
+  <param name="robot_description_semantic" textfile="$(find ymbot_b_moveit_config)/config/Aymbot_b_description.srdf" />
+  
+
+
+  <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" /> 
+  <!-- <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" /> -->
+  <!-- <node name="joint_state_publisher_gui" pkg="joint_state_publisher_gui" type="joint_state_publisher_gui" /> -->
+  <node name="moveit_test" pkg="udp2joint" type="moveit_test" />
+  <!-- <node name="udp2joint" pkg="udp2joint" type="udp2joint" /> -->
+  
+  <!-- <rosparam file="$(find ymbot_d_ros_control)/config/ros_control.yaml" command="load"/>
+  <rosparam file="$(find ymbot_d_ros_control)/config/initial_positions.yaml" command="load"/>
+
+  <node name="move_to_start_pose" pkg="ymbot_d_ros_control" type="move_to_start_pose" output="screen"/> -->
+
+ 
+  <!-- <node name="ymbot_d_ros_control_sim" pkg="ymbot_d_ros_control" type="ymbot_d_ros_control_sim" output="screen"/> -->
+  
+  
+  
+  <!-- <node name="rviz" pkg="rviz" type="rviz" args="-d $(find udp2joint)/rviz/text.rviz" required="true" />  -->
+
+
+  
+</launch>
