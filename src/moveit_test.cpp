@@ -37,12 +37,8 @@ using namespace std;
 class MoveitTest : public rclcpp::Node
 {
 public:
-    MoveitTest() 
-        : Node("moveit_test"),
-          robot_model_loader_(
-              std::shared_ptr<rclcpp::Node>(this),  // 将this转换为shared_ptr
-              "robot_description"
-          )
+    MoveitTest()
+        : Node("moveit_test")
     {
         // 将全局变量和回调函数移到类内部
         command_model_ = 0;
@@ -62,6 +58,10 @@ public:
         // 创建切换控制器的客户端
         switch_controller_client_ = create_client<controller_manager_msgs::srv::SwitchController>(
             "/controller_manager/switch_controller");
+    }
+
+    void initialize()
+    {
         while (!switch_controller_client_->wait_for_service(std::chrono::seconds(1)))
         {
             RCLCPP_WARN(this->get_logger(), "Waiting for switch_controller service...");
@@ -70,8 +70,10 @@ public:
         // switchToTrajectoryController();
         // 切换为位置控制器
         switchToPositionController();
-        // 获取机器人模型
-        kinematic_model_ = robot_model_loader_.getModel();
+        // shared_from_this() is only valid after make_shared has completed.
+        robot_model_loader_ = std::make_unique<robot_model_loader::RobotModelLoader>(
+            shared_from_this(), "robot_description");
+        kinematic_model_ = robot_model_loader_->getModel();
         
         // 修改线程创建方式
         receiver_thread_ = std::thread(&MoveitTest::receive, this);
@@ -322,7 +324,7 @@ private:
         
         // moveit规划接口 - 修改构造函数调用
         moveit::planning_interface::MoveGroupInterface move_group(
-            std::shared_ptr<rclcpp::Node>(this),  // 添加节点指针
+            shared_from_this(),
             group_name
         );
 
@@ -579,7 +581,7 @@ private:
     std::thread receiver_thread_;
     std::thread left_arm_thread_;
     std::thread right_arm_thread_;
-    robot_model_loader::RobotModelLoader robot_model_loader_;  // RobotModelLoader
+    std::unique_ptr<robot_model_loader::RobotModelLoader> robot_model_loader_;
     moveit::core::RobotModelPtr kinematic_model_;
     rclcpp::Client<controller_manager_msgs::srv::SwitchController>::SharedPtr switch_controller_client_;
 };
@@ -590,6 +592,7 @@ int main(int argc, char **argv)
 
     rclcpp::init(argc, argv);
     auto node = std::make_shared<MoveitTest>();
+    node->initialize();
     rclcpp::spin(node);
     rclcpp::shutdown();
     return 0;
